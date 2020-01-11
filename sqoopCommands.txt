@@ -1,0 +1,276 @@
+Nightly processing is done on sql servers.
+
+sqoop automatically supports several databases, including mysql. 
+first download the appropriate jdbc driver for the type of database you want to import
+install .jar $SQOOP_HOME/lib dir on client machine.
+
+Each driver .jar file also has a specific driver class which defines the entry-point to
+ the driver. For example, MySQL’s Connector/J library has a driver class of 
+com.mysql.jdbc.Driver. Refer to your database vendor-specific documentation to determine 
+the main driver class.
+ This class must be provided as an argument to Sqoop with --driver.
+
+#. --table and --query cannot run together.
+
+sqoop execution process :
+1. dataset using transferred is divided into partitions.
+2. a map-only job is launched with individual mappers responsible for transferring a slice of the dataset.
+3. each record of data is handled in a type-safe manner.
+
+sqoop can store the data into HDFS or Hive or Hbase or Accumalo.
+sqoop uses mapreduce tasks.
+
+output file could be:
+text file
+binary
+avro 
+sequence file
+serialized 
+parquet format
+--as-avrodatafile
+--as-sequencefile
+--as-textfile
+--as-paquetfile
+
+sqoop can list tables and databases.[--list-databases and --list-tables]
+
+$ which sqoop 
+
+$ sqoop help
+
+// controlling type mapping
+--map-column-java : overriding mapping from sql to java type for configured column
+--map-column-hive : overriding mapping from sql to hive type for configured column
+ex:
+$ sqoop import ... --map-column-java <nameOfColumn>=<newType>
+	
+____________________________________
+
+Large Objects :
+( BLOB and CLOB )
+these columns should not be materialized in memory for data manipulation as other are, instead
+data is handled in streaming fashion.
+
+size at which lobs spill into separates files in controlled by the --inline-lob-limit.
+
+
+
+--enclosed-by
+--escaped-by
+
+--fields-terminated-by is the option used during Sqoop Import (ie. they are the Output 
+Formatting arguments) which describe how the data will be written to HDFS.
+
+--input-fields-terminated-by is the option used during Sqoop Export (ie. they are Input 
+Formatting arguments) which describe how the input data is present in HDFS before 
+exporting to RDBMS.
+
+
+
+
+$ sqoop import --driver com.mysql.jdbc.Driver 		\
+	--connect jdbc:mysql://localhost/databaseName   \
+	--username userName -P 				\
+	--table tableName				\
+	--target-dir dirPath				\
+	-m 1 --as-textfile
+
+$ sqoop import --driver com.mysql.jdbc.Driver 		\
+	--connect jdbc:mysql://localhost/databaseName   \
+	--username userName -P 				\
+	--table tableName				\
+	--target-dir dirPath				\
+	-m 1 --as-textfile --where "sqlCondition"
+
+
+$ sqoop import --driver com.mysql.jdbc.Driver 		\
+	--connect jdbc:mysql://localhost/databaseName   \
+	--username userName -P 				\
+	--target-dir dirPath				\
+	-e "sqlQuery"					\
+	-m 1 --as-textfile
+
+
+$ sqoop import --driver com.mysql.jdbc.Driver 		\
+	--connect jdbc:mysql://localhost/databaseName   \
+	--username userName -P 				\
+	--target-dir dirPath				\
+	-e "sqlQuery"					\
+	-m 1 --as-textfile --split-by id
+
+$ split job -list
+
+$ sqoop export --connect jdbc:mysql://localhost/databaseName 	\
+	--username userName	-P				\
+	--table tableName					\
+	--export-dir dirPath					\
+	--input-fields-terminated-by "\001"
+
+
+//Either make option file and let sqoop read it from there
+
+optionfile: 
+import
+--driver com.mysql.jdbc.Driver 		
+--connect jdbc:mysql://localhost/databaseName   
+--username userName -P 				
+--target-dir dirPath				
+-e "sqlQuery"					
+-m 1 --as-textfile --split-by id
+
+
+$ sqoop --options-file optionfileName
+
+// or create password file ( echo -n "password" > passwordFileName )and then
+$ sqoop export --connect jdbc:mysql://localhost/databaseName 	\
+	--username userName					\
+	--password-file passwordFilePath			\
+	--table tableName					\
+	--export-dir dirPath					\
+	--input-fields-terminated-by "\001"
+
+
+
+#. you can also create password aliases and worjk with that.
+
+$ sqoop eval \
+--connect jdbc:mysql://localhost/databaseName \
+--driver com.mysql.jdbc.Driver \
+--username userName \
+--password-file filePath \
+--query "sqlquery"
+
+
+// if you want to choose specific columns
+--columns <col, col, col>
+
+$ hostname -f
+
+$ sqoop import-all-tables
+
+if hive is running on the system  then there will be a dir named /user/hive/warehouse .
+
+
+$ sqoop import-all-tables 					\
+	-m 12							\
+	--connect jdbc:mysql://localhost/databaseName		\
+	--driver com.mysql.jdbc.Driver				\
+	--username NameOfUser					\
+	--password-file filePath				\
+	--hive-import						\
+	--hive-overwrite					\
+	--create-hive-table					\
+	--compress						\
+	--compress-codec org.apache.hadoop.io.....		\
+	--outdir dirname
+
+// --outdir dirname : is dirpath where do we want to store java files created over execution of sqoop command.
+
+
+--boundary-query : is to help sqoop to decide how to partition the table
+ex:
+--boundary-query "select min(colName),max(colName) from table where id <> 8000"
+
+--split-by : if there is not any primary key , sqoop will not be able to split table in the mappers so you have to specify the column using this option.
+
+--null-string
+--null-non-string
+
+$ sqoop import \
+	--connect url	\
+	--username userName	\
+	-P \
+	--table tablename	\
+	--target-dir		\
+	--append		\
+	--field-terminated-by '|'	\
+	--lines-terminated-by '\n'	\
+	--split-id	dept_id		\
+	--where 'sql'			\
+	--outdir dirname
+
+
+// listing all jobs
+$ sqoop jobs --list
+
+$ sqoop jobs --show sqoop_jobs
+$ sqoop jobs --exec sqoop_jobs
+
+
+$ sqoop import \
+	--connect url	\
+	--username userName	\
+	-P \
+	--table tablename	\
+	--target-dir		\
+	--append		\
+	--field-terminated-by '|'	\
+	--lines-terminated-by '\n'	\
+	--hive-home specify-dir		\
+	--hive-overwrite		\
+	--hive-table tablename		\
+	--split-id	dept_id		\
+	--where 'sql'			\
+	--outdir dirname
+
+
+
+	INCREMENTAL imports
+
+sqoop provides an incremental import mode which can be used to retreive only rows newer than 
+some previously imported set of rows.
+
+--check-column
+--incremental
+--last-value
+
+$ sqoop import 					\
+	--connect url				\
+	--username nameOfuser			\
+	--password-file fileName		\
+	--table tablename			\
+	--target-dir dirPath			\
+	--append				\
+	--field-terminated-by '|'		\
+	--lines-terminated-by '\n'		\
+	--check-column columnName		\
+	--incremental append/lastModified	\
+	--last-Value	value			\
+	--outdir dirname
+
+
+// connects to database of host database.example.com
+$ sqoop import --connect jdbc:mysql://database.example.com/database 
+
+
+--update-mode  updateOnly/allowInsert
+--update-key columnName
+
+$ sqoop export --connect url			\
+	--username name				\
+	--password pswd				\
+	--table tableName			\
+	--export-dir dirPath			\
+	--batch					\
+	--outdir dirName			\
+	-m 1					\
+	--update-key colName			\
+	--update-mode allowInsert/updateOnly	
+
+
+// sqoop-merge{
+
+--class-name
+--jar-file
+--merge-key
+--new-data
+--onto
+--target-dir
+
+}
+
+
+// sqoop-codegen
+
+
+

@@ -1,0 +1,94 @@
+// runs  jar file , user can bundle their yarn code in a jar file and execute it using command
+$ yarn jar <jar>
+
+// prints applications report/kill application
+$ yarn application <options>
+{
+	-list
+	-appStates States
+	-appTypes apptypes 
+	-status ApplicationId
+	-kill applicationId
+}
+
+
+// printing nodes report
+$ yarn node <options>
+{
+	-list
+	-states States
+	-all
+	-status NodeId
+
+}
+
+
+// Dump the container logs
+$ yarn logs --applicationId <aplicationID> <options>
+{
+	-appOwner appOwner
+	-containerId containerId
+	-nodeAddress nodeaddress
+
+}
+
+
+// printing the classPath needed to get the Hadoop jar and the required libraries
+$ yarn classpath
+
+// printing version
+$ yarn version
+
+
+ADMINISTRATION COMMANDS:
+
+// starting resource Manager
+$ yarn resourcemanager
+
+$ starting nodeManager
+$ yarn nodemanager
+
+// The reason for the proxy is to reduce the possibility of web based attacks through YARN.
+$ yarn proxyserver
+
+// users can run stand alone web appli. proxy server as daemon
+$ $HADOOP_YARN_HOME/sbin/yarn-daemon.sh start proxyserver
+
+
+// runs resource Manager admin client
+$ yarn rmadmin <options>
+
+-refreshqueues
+-refreshNodes
+-refreshUserToGroupsMapping
+-getGroups username
+-transitionToActive serviceId
+-transitionToStandBy serviceId
+-getServiceStates serviceId
+-checkHealth serviceId
+
+
+//get and set the log level for each daemon
+$ yarn daemonlog -getlevel <host:port> <name>
+$ yarn daemonlog -setlevel <host:port> <name> <level>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
