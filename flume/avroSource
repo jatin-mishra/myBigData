@@ -48,8 +48,9 @@ reduce the CPU usage for compression.
 
 */
 
-// agent receiving data in compressed form using ssl
 
+___________________________________________________________________________________________________________________
+// agent receiving data in compressed form using ssl
 agent.sources = sourceName
 agent.channels = channelName
 agent.sinks = sinkName
@@ -73,7 +74,7 @@ agent.channels.memChannel.type = memory
 agent.sinks.sinkName.type = hdfs
 agent.sinks.sinkName.hdfs.path = path-to-file
 agent.sinks.sinkName.channel = channelName
-
+__________________________________________________________________________________________________________________
 // agent sending compressed data using ssl should be like :
 
 agent.sources = sourceName
