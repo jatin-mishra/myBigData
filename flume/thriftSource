@@ -28,7 +28,7 @@ systems that are written in non-JVM languages,
 For Flume agent–to–Flume agent
 communication, it is recommended that the Avro Sink–Avro Source pair be used.
 */
-
+_______________________________________________________________________
 // configuration of thrift Source
 agent.sources = sourceName
 agent.channels = channelName
@@ -41,7 +41,7 @@ agent.sources.sourceName.port = 4564
 
 agent.channels.channelName.type = memory
 
-
+_________________________________________________________________________
 // thrift sink that writes to this source would be :
 agent.channels = channelName
 agent.sinks = sinkName
