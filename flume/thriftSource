@@ -8,9 +8,13 @@ bind
 port
 threads
 
-flume(1.4.0) by default, is built against and includes thrift version (0.7.0). This was meant to support clients that would also write to hbase verion 0.92(or older) from the same process.
+flume(1.4.0) by default, is built against and includes thrift version (0.7.0). This was meant to support clients that 
+would also write to hbase verion 0.92(or older) from the same process.
 
-when using a versio of thrift lower than 0.8.0, flume uses thrift's TTHREADPOOL server, which uses one thread per client , and the threads parameter controls the maximum threads that source will create, thus indirectly controlling the number of clients that can connect to the agent. **IT IS RECOMMENDED NOT TO USE THIS PARAMETER AND CAN BE USED TO KEEP THE RESOURCE UTILIZATION UNDER CONTROL**
+when using a version of thrift lower than 0.8.0, flume uses thrift's TTHREADPOOL server, which uses one thread per client, 
+and the threads parameter controls the maximum threads that source will create, thus indirectly controlling the number of 
+clients that can connect to the agent. **IT IS RECOMMENDED NOT TO USE THIS PARAMETER AND CAN BE USED TO KEEP THE RESOURCE 
+UTILIZATION UNDER CONTROL**
 
 If a newer version of Thrift is being used, then Flume
 uses Thrift’s TThreadedSelectorServer , which uses Java’s nonblocking I/O and
