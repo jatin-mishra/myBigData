@@ -1,0 +1,104 @@
+/*
+
+The Avro Source is designed to be a
+highly scalable RPC server that accepts data into a Flume agent, from another Flume
+agent’s Avro Sink or from a client application that uses Flume’s SDK to send data.
+
+
+Flume's avro source uses a Netty-Avro interProcess communication(IPC) protocol to communicate. As a result it is possible to send data to avro source from java or JVM languages.
+
+Avro source can be configured to accept compressed events from an avro sink that is configured to output them.
+
+It can be configured to make sure that any clients or sinks sending data to it encryot the data using SSL. 
+
+some parameters are :
+
+type :
+bind :
+port :
+threads :
+ssl : :
+keystore :
+keystore-password: 
+keystore-type : JKS(java keystore)
+compression type :
+
+A Java KeyStore (JKS) is a repository of security certificates – either authorization certificates or public key certificates – plus corresponding private keys, used for instance in SSL encryption.
+
+
+minimal required parameters are bind and port.
+To use specific interface to bind source , simply set the IP address/domainaddress of that interface. To bind with all interfaces use 0.0.0.0.
+
+A keystore is a collection of cryptographic keys and certificates, as
+defined by the Java standard [keystore]. Each keystore is protected
+by a password, which can be used load the keystore. In Flume’s
+case, this password is stored in the Flume configuration file as plain
+text; the configuration file must be guarded by the correct permis‐
+sions to avoid this password falling into the wrong hands.
+
+To enable the Avro Source to receive data in
+compressed form, set the compression-type parameter to deflate .
+	If this parameter is not set or is set to none, flume will not try to deompress the data.
+If parameter is set to deflate then incoming data must be compressed otherwise it cannot parse it.
+
+Also note that when the Avro Sink/Flume RPC client sends data to
+the Avro Source, it compresses the data batch by batch, not event
+by event, since this may provide a better compression ratio and
+reduce the CPU usage for compression.
+
+*/
+
+// agent receiving data in compressed form using ssl
+
+agent.sources = sourceName
+agent.channels = channelName
+agent.sinks = sinkName
+
+agent.sources.sourceName.type = avro
+agent.sources.sourceName.channels = channelName
+
+# bind to interfaces
+agent.sources.sourceName.bind = 0.0.0.0
+agent.sources.sourceName.port = 4353
+
+# removing the next line will disable SSL
+agent.sources.sourceName.ssl = true
+agent.sources.sourceName.keystore = /tmp/keystore.jks
+agent.sources.avroSrc.keystore-password = UsingFlume
+agent.sources.avroSrc.keystore-type = jks
+
+agent.sources.avroSrc.compression-type = deflate
+agent.channels.memChannel.type = memory
+
+agent.sinks.sinkName.type = hdfs
+agent.sinks.sinkName.hdfs.path = path-to-file
+agent.sinks.sinkName.channel = channelName
+
+
+// agent sending compressed data using ssl should be like :
+
+agent.sources = sourceName
+agent.sinks = sinkName
+agent.channels = channelName
+
+agent.sources.sourceName.type = netcat
+agent.sources.sourceName.bind = 0.0.0.0
+agent.sources.sourceName.port = 6666
+agent.sources.sourceName.channels = channelName
+
+agent.channels.channelName.type = memory
+
+agent.sinks.sinkName.type = avro
+agent.sinks.sinkName.channel = channelName
+
+agent.sinks.sinkName.hostname = avrosrchost.example.com
+agent.sinks.sinkName.port = 4353
+
+# ssl properties
+agent.sinks.sinkName.ssl = true
+agent.sinks.sinkName.trust-all-certs = true
+agent.sinks.sinkName.truststore = /path/to/keystore
+agent.sinks.sinkName.truststore-password = UsingFlume
+agent.sinks.sinkName.truststore-type = JKS
+
+agent.sources.sinkName.compression-type = deflate
