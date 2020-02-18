@@ -1,0 +1,100 @@
+A Spooling Directory Source watches a directory, from which it reads events.
+
+#. donot support modification in files or same name of files in it.
+
+The Spooling Directory Source is a good alternative to using an Exec Source with
+tail -F.
+Once a file is completely consumed by
+the source and all its events successfully written to the source’s channel(s), the source
+can either rename the file or delete the file, based on the configuration.
+
+
+The Spooling Directory Source uses a tracker persisted to disk to track the location
+within each file at which events were successfully written out to the channel, so that
+the source can start reading data from that position if the agent or machine fails and
+restarts.
+
+For per‐
+formance reasons, the source writes events in batches. The maximum size of each
+batch is defined by the batchSize parameter.
+
+there are files that get written to the same directory that may actually not
+contain data, like metadata files. To avoid ingesting such files, which are known to
+not contain valid data, an ignore pattern can be specified via the ignorePattern
+parameter. This parameter takes a regex, and any files with filenames matching this
+regex are ignored.
+
+
+To delete the files immediately, set the value of the deletePolicy
+parameter to immediate . If deletePolicy is set to never (the default), the file is
+renamed once ingested with the suffix specified by the fileSuffix parameter
+appended to the original name of the file. Any files that use this suffix for completed
+files are ignored, so be careful to not use a file suffix that could be the suffix of new
+files that get written to the directory.
+
+
+
+When a file is processed and events are generated from the file, it is often beneficial
+for processing systems to know which file the events came from (for example, show‐
+ing the filename a stack trace belongs to in a search UI). The full path and the file‐
+name can be included by setting the fileHeader parameter to true . The key to use in
+the headers can be set using the fileHeaderKey parameter (this defaults to file ).
+
+The default name
+of the tracker directory is .flumespool.
+
+the value of the trackerDir parameter is used as a relative path to the directory
+that the source is watching.
+
+
+ex:
+
+<agentName>.sources = sourceName
+<agentName>.channels = channelName
+
+<agentName>.sources.sourceName.type = spooldir
+<agentName>.sources.sourceName.channels = channelName
+
+<agentName>.sources.sourceName.spoolDir = path/TO/spooldir
+<agentName>.sources.sourceName.batchSize = 250
+
+<agentName>.sources.sourceName.deletePolicy = immediate
+<agentName>.sources.sourceName.fileHeader = true
+<agentName>.sources.sourceName.fileHeaderKey = keyName
+<agentName>.sources.sourceName.deserializer = apacheDesirializer
+
+<agentName>.channels.channelName.type = memory
+<agentName>.channels.channelName.capacity = 10000
+<agentName>.channels.channelName.transactionCapacity = 500
+
+types of flume Event Serializers :
+body text serializer :
+"flume event" avro event Serializer 
+Avro Event Serializer
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
