@@ -1,10 +1,13 @@
-Syslog is a well-known format is used by many applications to write log messages. Flume integrates with syslog and can receive syslogmessages both in TCP and UDP. Flume provides two syslog sources :
+Syslog is a well-known format is used by many applications to write log messages. Flume integrates with syslog and 
+can receive syslogmessages both in TCP and UDP. Flume provides two syslog sources :
 1. Syslog UDP Source
 2. multiport syslog Source
 
-Both Sources can parse Syslog messages and extract fields into flume event headers , which can be used in hdfs sink bucketing.
+Both Sources can parse Syslog messages and extract fields into flume event headers , which can be used in hdfs sink 
+bucketing.
 
-Syslog UDP source considers an entire UDP datagram to be one syslog event and converts it to a single flume event, while the multiport syslog source creates a new message each time it encounters a newLine character.
+Syslog UDP source considers an entire UDP datagram to be one syslog event and converts it to a single flume event, 
+while the multiport syslog source creates a new message each time it encounters a newLine character.
 
 These sources create two headers : Facility and severity.
 
@@ -14,8 +17,11 @@ configuration list :
 type : syslogudp , multiport_syslogtcp
 host : ip address or hostname to bind to
 keepFields : {
-	if set to true, all fields from syslog messages are left in the event body in addition to having them in the event headers.
-	If keepFields is set to true , fields from the syslog message that are normally moved to the event headers (or removed altogether), such as Priority, Timestamp, and Hostname, are left in the body of the event as well as copied to the event headers.
+	if set to true, all fields from syslog messages are left in the event body in addition to having them in the 
+	event headers.
+	If keepFields is set to true , fields from the syslog message that are normally moved to the event headers 
+	(or removed altogether), such as Priority, Timestamp, and Hostname, are left in the body of the event as well 
+	as copied to the event headers.
 
 }
 
@@ -34,17 +40,27 @@ readBufferSize :
 numProcessors :
 
 
-The Multiport Syslog Source can receive data on multiple ports. The ports should be listed separated by spaces as the value of the ports parameter. Each event received can be annotated with the port number on which the event was received. The value of the configuration parameter portHeader is used as the key for the header in the Flume event, and the value of this header is the port number.
+The Multiport Syslog Source can receive data on multiple ports. The ports should be listed separated by spaces as the 
+value of the ports parameter. Each event received can be annotated with the port number on which the event was received.
+The value of the configuration parameter portHeader is used as the key for the header in the Flume event, and the value 
+of this header is the port number.
 
-The source also allows syslog messages to be encoded in different character sets on each port it receives data on. To configure the character set per port, use the char set.port. prefix followed by the port number as the configuration parameter, with the value being the character set name. The default character set can be set using the charset.default parameter.
+The source also allows syslog messages to be encoded in different character sets on each port it receives data on. To 
+configure the character set per port, use the char set.port. prefix followed by the port number as the configuration 
+parameter, with the value being the character set name. The default character set can be set using the charset.default
+parameter.
 
-Sometimes we want to make sure that eventSize should not go above some fixed size, in that case we can use eventSize parameter.If the event’s size is greater than this value, the event is truncated to this length, and a header with the key flume.syslog.status is inserted with the value Incomplete .
+Sometimes we want to make sure that eventSize should not go above some fixed size, in that case we can use eventSize 
+parameter.If the event’s size is greater than this value, the event is truncated to this length, and a header with the 
+key flume.syslog.status is inserted with the value Incomplete .
 
-This source uses a framework called APACHE MINA to recieve messages. The MINA server uses an internal buffer while reading the data from network. size of buffer is configurable via readBufferSize. 
+This source uses a framework called APACHE MINA to recieve messages. The MINA server uses an internal buffer while 
+reading the data from network. size of buffer is configurable via readBufferSize. 
 
 
 MINA also supports heavy parallelism. To configure the degree of parallel‐
-ism, the number of processors that can be used can be passed in using the numProcessors parameter. If this is not defined, the value of the number of processors to be used is autodetected.
+ism, the number of processors that can be used can be passed in using the numProcessors parameter. If this is not 
+defined, the value of the number of processors to be used is autodetected.
 
 if the Flume source is unable to
 write the events to the channel, or if there is some network disrup‐
@@ -52,7 +68,8 @@ tion causing the message to be lost (especially in the UDP case),
 there is no real way for Flume to inform the sender of failure or for
 the sender to know that there is an error condition and resend the
 message.
-this causes data loss so it is recommended to only use syslog if there is no other option and the flume RPC client or the embedded agent cannot be used at all.
+this causes data loss so it is recommended to only use syslog if there is no other option and the flume RPC client 
+or the embedded agent cannot be used at all.
 
 _________________________________________________________________
 
