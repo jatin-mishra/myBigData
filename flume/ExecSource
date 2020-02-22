@@ -1,0 +1,53 @@
+An exec source executes a command configured by the user and generates events based on the standard output of the command. it can also read the error stream from the command, and convert the events into flume events , and write them to the channel. 
+
+Exec Source Configuration:
+type
+command
+restart
+restartThrottle
+logStdErr 
+batchSize
+batchTimeOut
+charset
+shell
+
+Exec Source buffers data to ensure good performance when used in conjunction with the File Channel. As mentioned in “File Channel” on page 85, the performance of the channel is better when the number of events per transaction is reasonably high.
+
+If both batchSize and batchTimeout are set, the batch is written to the channel as soon as the batch size or batch timeout is met.
+
+The Exec Source can be set to run the configured command in a separate shell, which may be different from the one the Flume process is running in. To run the process in a different shell, pass the full path of the shell executable to the shell parameter. If the command requires shell features like substitution of wildcards or pipes, the shell parameter must be set, since Flume will not perform substitution.
+
+The Exec source is an example of an asynchronous source, which cannot inform the data producer if there is a failure.
+
+
+It is recommended to use the Spooling Directory Source
+discussed earlier in this chapter to handle data written into files.
+Though slightly more restrictive, this source will not lose data as it
+tracks the data being read from the file.
+
+ex:
+
+agent.sources = sourceName
+agent.channels = channelName
+
+agent.sources.sourceName.type = exec
+agent.sources.sourceName.shell = /bin/bash -c
+agent.sources.sourceName.command = tail -F /var/log/flume.log | grep "error :"
+
+agent.sources.sourceName.channels = channelName
+
+agent.chanels.channelName.type = memory
+
+
+
+
+
+
+
+
+
+
+
+
+
+
