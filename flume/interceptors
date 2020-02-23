@@ -1,0 +1,84 @@
+the only configuration parameter common to all interceptors is the type parameter, which must be alias of interceptor.
+
+agent.sources.avroSrc.interceptors = hostInterceptor timestampInterceptor
+agent.sources.avroSrc.interceptors.hostInterceptor.type = host
+agent.sources.avroSrc.interceptors.hostInterceptor.preserveExisting = true
+agent.sources.avroSrc.interceptors.timestampInterceptor.type = timestamp
+agent.sources.avroSrc.interceptors.timestampInterceptor.preserveExisting = false
+
+TimeStamp Interceptor :
+
+inserts timestamp into the flume event headers, with timestamp key, which is the hreader that the HDFS sink uses for bucketing.
+
+An example of an agent with a source connected to a timestamp interceptor is shown
+here:
+
+agent.sources.avro.interceptors = timestampInterceptor
+agent.sources.avro.interceptors.timestampInterceptor.type = timestamp
+agent.sources.avro.interceptors.timestampInterceptor.preserveExisting = false
+
+Host interceptor :
+inserts the IP address or hostname of the server on which the agent is running into the flumeevent headers.
+
+The key to be used in the headers is configrable using hostHeader parameter, but defaults to host. 
+
+type
+hostHeader
+useIP
+preserveExsisting
+
+agent.sources.avro.interceptors = hostInterceptor
+agent.sources.avro.interceptors.hostInterceptor.type = host
+agent.sources.avro.interceptors.hostInterceptor.useIP = false
+agent.sources.avro.interceptors.hostInterceptor.preserveExisting = true
+
+static interceptor :
+inserts simply fixed header key and value into every event that it intercepts.
+
+agent.sources.avro.interceptors = staticInterceptor
+agent.sources.avro.interceptors.hostInterceptor.type = static
+agent.sources.avro.interceptors.staticInterceptor.key = book
+agent.sources.avro.interceptors.staticInterceptor.value = usingFlume
+agent.sources.avro.interceptors.staticInterceptor.preserveExisting = false
+
+Regex Filtering Interceptor :
+
+type : regex_filter
+regex :
+excludeEvents : true/false
+
+agent.sources.avroSrc.interceptors = include exclude
+agent.sources.avroSrc.interceptors.include.type = regex_filter
+agent.sources.avroSrc.interceptors.include.regex = .*flume.*
+agent.sources.avroSrc.interceptors.include.excludeEvents = false
+agent.sources.avroSrc.interceptors.exclude.type = regex_filter
+agent.sources.avroSrc.interceptors.exclude.regex = .*DEBUG.*
+agent.sources.avroSrc.interceptors.exclude.excludeEvents = true
+
+
+Morphline Interceptor :
+
+UUID interceptor :
+
+type
+headerName
+prefix
+preserveExisting
+
+
+Writing your own interceptors :
+
+packageorg.apache.flume.interceptor;
+public interface Interface{
+	public void initialize();
+	public Event intercept(Event event);
+	public List<Event> intercept(List<Event> events);
+	public void close();
+
+	public interface Builder extends Configurable{
+		public Interceptor build();
+	}
+}
+
+If the variant that takes in one event is called, then the transaction will have exactly one event and is called by the channel processor’s processEvent method, which is called by the source for processing the event. When the second variant is called, the channel processor’s processEventBatch method is called by the source, and all events in the list returned by the interceptor are written in a single transaction.
+
