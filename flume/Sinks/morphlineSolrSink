@@ -1,0 +1,10 @@
+Several commands can be chained together, with the
+output of one command being the input of the next, to perform heavyweight trans‐
+formation of data. Such a chain of commands is referred to as a Morphline.
+
+The
+Morphline Solr Sink integrates the Morphline framework with Flume by providing a
+sink that can transfer data from a Flume pipeline into such a morphline (chain of
+commands).
+
+The Morphline solr sink converts each flume event into a record by moving the event body to the attachment_body field of the record.

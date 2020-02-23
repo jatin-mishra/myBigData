@@ -1,0 +1,16 @@
+The avro sink uses avro's Netty based RPC protol to send data to an Avro Source. 
+
+type
+hostname
+port
+batch-size
+compression-type
+compression-level
+connect-timeout
+request-timeout
+ssl
+trust-all-certs
+truststore
+truststore-password
+truststore-type
+reset-connection-interval

@@ -1,0 +1,289 @@
+The HDFS Sink is very flexible and can be configured to write to different directories based on event headers, the timestamp of the event (or current time at the sink), etc.
+
+The HDFS sink allows the user to customize the format in which events are written to HDFS using serializers. 
+
+HDFS Sink writes data to buckets on HDFS. bucket is a directory to which the HDFS sink writes data, based on the criteria by the cofiguration.An HDFS sink can write data to multiple buckets at the same time though each event will go to exactly one bucket.Each bucket will have exactly one file open at any instant of time though each sink could have various files open in different buckets. Each event is then evaluated and gets written to 
+
+By default , FLume doesnot write ti hidden files on HDFS, but to files that end with a .tmp extension. This can be changed in configuration.
+
+Understanding buckets:
+agent.sinks.sinkName.hdfs.path = /Data/Flume/%{topic}
+When the HDFS Sink reads an event off of the channel, it reads the value of the topic header and replaces the escape sequence in the path from the configuration parameter with the value of the header named topic. For example, an event whose topic header has the value inputData would get written out to a file in the directory on HDFS with the path /Data/Flume/inputData. Another event whose topic header has the value logData would get written out to a file in the directory on HDFS with the path /Data/Flume/logData.
+
+agent.sinks.sinkname.hdfs.path = /Data/Flume/%{topic}/%Y/%m/%d/%H
+
+This example would write all events with timestamps within the same hour in the
+same directory for each topic. If an event with topic UsingFlume came in with a timestamp of 2:35 PM on September 1, 2014, it would get written to the /Data/Flume/UsingFlume/2014/09/01/14 directory.
+
+it is possible for data to be written to a bucket with an older timestamp, since the timestamp used by the sink is based on the header in the event—if the timestamp is inserted on event creation or by an interceptor in a Flume agent, agent downtime or network delays can cause the event to arrive at the HDFS Sink much later than that time. If a Hive query is loading data based on time-based buckets, such delayed writes must be accounted for. If only the latest directories are scanned, then the new data in directories with much older timestamps may never get loaded. The HDFS Sink has a configuration parameter, hdfs.useLocalTimestamp, 
+that if set to true forces the sink to use the system timestamp of the machine that is running the agent;
+
+
+hdfs.round 				
+hdfs.roundValue
+hdfs.roundUnit
+
+agent.sinks.sinkname.hdfs.path = /Data/Flume/%{topic}/%Y/%m/%d/%H/%M
+agent.sinks.sinkname.hdfs.round = true
+agent.sinks.sinkname.hdfs.roundUnit = minute
+agent.sinks.sinkname.hdfs.roundValue = 10
+If an event with the timestamp equivalent of 2:35 PM on September 1, 2014 comes in,the HDFS Sink rounds the timestamp down to 2:30 PM on September 1, 2014 and
+writes the event out to the /Data/Flume/UsingFlume/2014/09/01/14/30 directory. In fact, every event between 2:30:00:00:000 PM and 2:39:59:59:999 will get written out to the same directory.
+
+configuring hdfs sink :
+
+type
+hdfs.path
+hdfs.fileprefix
+hdfs.filesuffix
+
+hdfs.inUsePrefix
+hdfs.inUseSuffix
+
+hdfs.timzone
+hdfs.batchSize
+hdfs.idleTimeout
+hdfs.fileType
+hdfs.codeC
+hdfs.maxOpenFiles
+hdfs.threadsPoolSize
+hdfs.useLocalTimeStamp
+hdfs.round
+hdfs.roundUnit
+hdfs.roundValue
+serializer
+serializer.*
+hdfs.rollcount
+hdfs.rollInterval
+hdfs.rollSize
+hdfs.kerberosPrincipal : 
+hdfs.kerberosKeytab :
+hdfs.proxyUser
+____________________________________________________________
+
+
+agent.sinks.sinkname.hdfs.filePrefix = UsingFlume
+agent.sinks.sinkname.hdfs.fileSuffix = .oreilly
+
+This configuration would eventually yield files that would be named something like  UsingFlume.33434321.oreilly, UsingFlume.33434322.oreilly, etc. 
+__________________________________________________________________
+
+When the file is still being written to, it is recommended that systems like Hive or MapReduce ignore the file until Flume closes it.
+Unfortunately,
+it is not easy to find out if a file is being written to and if the content will get updated.
+To work around this problem,
+
+agent.sinks.sinkname.hdfs.filePrefix = UsingFlume
+agent.sinks.sinkname.hdfs.fileSuffix = .oreilly
+agent.sinks.sinkname.hdfs.inUsePrefix = .
+agent.sinks.sinkname.hdfs.inUseSuffix = .temp
+
+hdfs.rollInterval : file is flushed , closed and renamed after the time specified  by this parameter. Setting this to 0 disables time-based rolling.
+
+using it we can also roll the file based on the number of events entered into the file.
+hdfs.rollcount controls this.
+hdfs.rollSize : roll the file based on size of the size of the file. this is precompressed size even if writting is in compressed format.
+
+
+When time-based bucketing is used, it is possible that after a certain point in time, no more events get written to a bucket. It will take at least as long as the roll interval, if enabled, for the file to be closed. If the roll interval is not enabled, such a file might never get closed. So,it is always recommended to set hdfs.idleTimeout , which is the time in seconds to wait before closing a file after the last event was written to the file.
+
+This is important because exactly one HDFS Sink can write to each file;This can
+be done by using hostname and sink name as part of the bucket name. the hostname can be inserted by the host interceptor that comes bundled with flume.
+
+
+When using sequence files, the serializer and
+serializer.* parameters are ignored. The hdfs.writeFormat parameter is ignored
+when using a data stream or compressed stream.
+
+To compress the data, the file type must be set to CompressedStream , and the hdfs.codeC parameter should be set to one of gzip , bzip2 , lzo , lzop , or snappy , indicating which codec to use to write to HDFS.
+
+If required , HDFS can be secured using kerberos. The HDFS Sink can write to a secure HDFS using credentials that are specified in the configguration file. the hdfs. 
+
+hdfs.kerberosPrincipal : 
+hdfs.kerberosKeytab :
+hdfs.proxyUser
+
+All Hdfs sinks within the same agent must use the same kerberos credentials to log in. 
+
+
+To trigger rolling and idle timeouts, Flume uses a separate thread pool whose size can be configured too, though this is rarely required. This can be tweaked using the hdfs.rollTimerPoolSize parameter.
+The maximum number of events written out per transaction is controlled by
+hdfs.batchSize.
+
+
+agent.sinks = sinkname
+agent.sinks.sinkname.type = hdfs
+agent.sinks.sinkname.hdfs.path = /Data/UsingFlume/%{topic}/%Y/%m/%d/%H/%M
+agent.sinks.sinkname.hdfs.filePrefix = UsingFlumeData
+agent.sinks.sinkname.hdfs.inUsePrefix = .
+agent.sinks.sinkname.hdfs.inUseSuffix = .temporary
+agent.sinks.sinkname.hdfs.fileType = CompressedStream
+agent.sinks.sinkname.hdfs.round = true
+agent.sinks.sinkname.hdfs.roundUnit = minute
+agent.sinks.sinkname.hdfs.roundValue = 10
+agent.sinks.sinkname.hdfs.codeC = snappy
+agent.sinks.sinkname.hdfs.rollInterval = 120
+agent.sinks.sinkname.hdfs.rollSize = 128000000
+agent.sinks.sinkname.hdfss.rollCount = 100,000
+agent.sinks.sinkname.hdfs.idleTimeout = 30
+agent.sinks.sinkname.hdfs.kerberosPrincipal = flume/_HOST@OREILLY.COM
+agent.sinks.sinkname.hdfs.kerberosKeytab = /etc/flume/conf/UsingFlume.keytab
+agent.sinks.sinkname.hdfs.proxyUser = UsingFlume
+
+
+
+
+Controlling the Data Format Using Serializers :
+A good way to use formats like Parquet with Flume is
+to write data as Avro and then convert it into Parquet using the tools that come with
+Parquet or using Impala.
+
+package org.apache.flume.serialization;
+
+public interface EventSerializer{
+	public static String CTX_PREFIX = "serializer";
+	public void afterCreate()
+	public void afterReopen()
+	public void write(Event event)
+	Public void flush()
+	public void beforeClose()
+	public boolean supportsReopen()
+	public interface Builer{
+		public EventSerializer build(Context context, OutputStream out)
+	}
+}
+
+
+The HDFS Sink passes a OutputStream instance and a Context instance to the builder, which in turn builds and configures the Serializer instance that is returned to the sink.
+
+The serializer is expected to convert the events passed in to its write
+method into the required format and then write the data out to the output stream provided. Serializers can be configured using the Context instance passed in.
+
+
+The afterOpen method is called immediately after the file is opened. This method can be used to write file-level header information, like the top-level tag in a serializer that may be writing data in XML.
+
+___________________________________________________
+
+package usingflume.ch05;
+
+public class ProtobufSerializer implements EventSerializer{
+	private final boolean writeHeaderAndFooter;
+	private final BufferedOutputStream stream;
+
+	private static final byte[] footer = ("ENd using Flume protobuf file").getBytes();
+	private static final byte[] header = ("Begin Using Flume protobuf file").getBytes();
+
+	private void ProtobufSerializer(Context context, OutputStream stream){
+		writeHeaderAndFooter = context.getBoolean("writeHeaderAndFooter",false);
+		this.stream = new BufferedOutputStream(stream);
+	}	
+
+	public void afterCreate() throws Exception{
+		if(writeHeaderAndFooter){
+			stream.write(header);
+		}
+	}
+
+	public void afterReopen(){
+
+	}
+
+	public void write(Event event) throws Exception{
+		UsingFlumeEvent.Event.Builder builder = UsingFlumeEvent.Event.newBuilder();
+		for(Map.Entry<String,String> entry : event.getHeaders().entrySet()){
+			builder.addHeader(UsingFlumeEvent.Header.newBuilder()
+							  .setKey(entry.getKey())
+							  .setVal(entry.getValue()).build());
+		}
+	}
+
+	public void flush() throws Exception{
+		stream.flush();
+	}
+
+	public void beforeClose() throws Exception{
+		if(writeHeaderAndFooter){
+			stream.write(footer);
+		}
+	}
+
+	public boolean supportsReopen(){
+		return false;
+	}
+
+	public static class Builder implements EventSerializer.Builder{
+
+		public EventSerializer build(Context context,OutputStream out){
+			return new ProtobufSerializer(context,out);
+		}
+
+	}
+
+}
+_______________________________________________________
+
+any configuration parameter passed with the suffix serializer get passed to the serializer. 
+
+agent.sinks.hdfsSink.serializer.bufferSize = 4096
+agent.sinks.hdfsSink.serializer.charset = UTF-8
+
+
+There are only three serializers that come built into Flume : the Text serializer , the HEADER_AND_TEXT serializer and AVRO_EVENT serializer. 
+
+agent.sinks.hdfsSink.fileType = DataStream
+agent.sinks.hdfsSink.serializer = HEADER_AND_TEXT
+agent.sinks.hdfsSink.serializer.appendNewline = false
+
+
+
+
+
+Mapreduce jobs can read avro container files directly using avro Mapreduce module. To compress avro container fils , avro's native compression should be used rather than using flume's compressed stream.
+
+To use Avro’s native
+compression, pass the compressionCodec parameter to the serializer with the value
+set to either deflate or snappy for the corresponding compression codec.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
