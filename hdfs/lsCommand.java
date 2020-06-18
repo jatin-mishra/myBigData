@@ -1,21 +1,20 @@
-package com.hdfs_java_api;
 
 import java.io.*;
+import java.net.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.FileStatus;
 
-
-public class ListUsingJavaApi{
-
-	public static void main(String[] args){
-		String uri = "hdfs://localhost:9000/";
+public class listFiles{
+	public static void main(String[] args) throws Exception{
+		String uri = "hdfs://localhost:9000";
 		Configuration conf = new Configuration();
 		FileSystem fs = FileSystem.get(URI.create(uri),conf);
-		FileStatus fstatus[] = fs.listStatus(new Path(uri));
+		FileStatus[] filestatus = fs.listStatus(new Path("hdfs://localhost:9000/allInputData"));
 
-		for(FileStatus filestatus : fstatus){
-			System.out.println(filestatus.getPath().getName());
+		for(FileStatus filestat : filestatus){
+			System.out.println(filestat.getPath().getName());
 		}
 	}
 }
