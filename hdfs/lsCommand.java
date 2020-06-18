@@ -11,6 +11,8 @@ public class listFiles{
 		String uri = "hdfs://localhost:9000";
 		Configuration conf = new Configuration();
 		FileSystem fs = FileSystem.get(URI.create(uri),conf);
+		
+		// we can also use : FileSystem fs = FileSystem.get(conf);
 		FileStatus[] filestatus = fs.listStatus(new Path("hdfs://localhost:9000/allInputData"));
 
 		for(FileStatus filestat : filestatus){
